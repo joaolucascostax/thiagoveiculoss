@@ -1,10 +1,10 @@
-# SAMCAR
+# Thiago Veículos
 
 quero recriar esse site, faça o maximo para ser 100% identico!
 
 This project was built with [Lovable](https://lovable.dev).
 
-**Live app**: https://samcar.lovable.app
+**Live app**: https://thiagoveiculoss.lovable.app
 
 ## Build with Lovable
 
