@@ -91,11 +91,25 @@ function titleCase(s: string): string {
     .trim();
 }
 
+function bodyTypeLabel(raw: string): string {
+  const s = (raw ?? "").toLowerCase();
+  if (s.includes("hatch")) return "Hatch";
+  if (s.includes("picape") || s.includes("pickup") || s.includes("pick-up")) return "Picape";
+  if (s.includes("sed")) return "Sedã";
+  if (s.includes("suv") || s.includes("utilitário esportivo")) return "SUV";
+  if (s.includes("cupê") || s.includes("coupe") || s.includes("convers")) return "Cupê/Conversível";
+  if (s.includes("van") || s.includes("utilitário")) return "Van/Utilitário";
+  if (s.includes("carroceria") || s.includes("caminh")) return "Caminhão";
+  if (s.includes("naked") || s.includes("custom") || s.includes("moto")) return "Moto";
+  return raw ? titleCase(raw) : "";
+}
+
 type VehicleRow = {
   external_id: string;
   source: string;
   brand: string;
   model: string;
+  body_type: string;
   year: string;
   price: number;
   mileage: string;
@@ -127,6 +141,7 @@ function mapAd(ad: string): VehicleRow | null {
     source: "feed",
     brand,
     model,
+    body_type: bodyTypeLabel(tag(ad, "BODY") || tag(ad, "BODY_TYPE")),
     year: yearOnly(tag(ad, "YEAR")),
     price: priceNumber(tag(ad, "PRICE") || tag(ad, "REGULAR_PRICE")),
     mileage: mileageLabel(String(mileageNum)),
