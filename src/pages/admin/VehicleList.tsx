@@ -18,6 +18,19 @@ export default function VehicleList() {
   const updateVehicle = useUpdateVehicle();
   const deleteVehicle = useDeleteVehicle();
   const queryClient = useQueryClient();
+  const feedSync = useFeedSync();
+  const { data: lastImport } = useLastFeedImport();
+
+  const handleFeedSync = () => {
+    feedSync.mutate(undefined, {
+      onSuccess: (r) =>
+        toast.success(
+          `Feed importado: ${r.created} novos, ${r.updated} atualizados, ${r.deactivated} desativados.`
+        ),
+      onError: (e) => toast.error(`Erro na importação: ${e instanceof Error ? e.message : "desconhecido"}`),
+    });
+  };
+
   const [search, setSearch] = useState("");
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [placidOpen, setPlacidOpen] = useState(false);
