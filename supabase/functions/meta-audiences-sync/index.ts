@@ -132,15 +132,15 @@ Deno.serve(async (req) => {
 
     // Cria/atualiza os 3 públicos
     const visitorsAudienceId = await findOrCreateAudience(
-      "SamCar - Visitantes 90d",
+      "Thiago Veículos - Visitantes 90d",
       "Visitantes do site nos últimos 90 dias — auto-sync"
     );
     const leadsAudienceId = await findOrCreateAudience(
-      "SamCar - Leads 90d",
+      "Thiago Veículos - Leads 90d",
       "Leads (WhatsApp) dos últimos 90 dias — auto-sync"
     );
     const buyersAudienceId = await findOrCreateAudience(
-      "SamCar - Compradores",
+      "Thiago Veículos - Compradores",
       "Clientes que compraram — auto-sync (base para Lookalike)"
     );
 
