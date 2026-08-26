@@ -9,6 +9,8 @@ const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const CRON_SECRET = Deno.env.get("LOVABLE_CRON_SECRET");
 const CRON_SECRET_PREVIOUS = Deno.env.get("LOVABLE_CRON_SECRET_PREVIOUS");
+const FEED_SYNC_TOKEN = Deno.env.get("FEED_SYNC_TOKEN");
+
 
 const FEED_URL =
   "https://raw.githubusercontent.com/joaolucascostax/thiago2/main/docs/catalog_vehicles.csv";
