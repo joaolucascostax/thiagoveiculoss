@@ -1,7 +1,9 @@
 import { useState, useRef, useCallback } from "react";
 import { Link } from "react-router-dom";
-import { Plus, Pencil, Trash2, Eye, EyeOff, GripVertical, Sparkles } from "lucide-react";
+import { Plus, Pencil, Trash2, Eye, EyeOff, GripVertical, Sparkles, RefreshCw } from "lucide-react";
 import { useVehicles, useUpdateVehicle, useDeleteVehicle } from "@/hooks/useVehicles";
+import { useFeedSync, useLastFeedImport } from "@/hooks/useFeedSync";
+
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
