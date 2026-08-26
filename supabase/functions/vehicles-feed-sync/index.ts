@@ -171,7 +171,12 @@ function mapAd(ad: string): VehicleRow | null {
     source: "feed",
     brand,
     model,
-    body_type: bodyTypeLabel(tag(ad, "BODY") || tag(ad, "BODY_TYPE")),
+    body_type: resolveBodyType(
+      tag(ad, "BODY") || tag(ad, "BODY_TYPE"),
+      tag(ad, "CATEGORY"),
+      baseModel,
+      version,
+    ),
     year: yearOnly(tag(ad, "YEAR")),
     price: priceNumber(tag(ad, "PRICE") || tag(ad, "REGULAR_PRICE")),
     mileage: mileageLabel(String(mileageNum)),
