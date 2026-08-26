@@ -14,6 +14,9 @@ const DEFAULT_PALETTE = {
   color_foreground: "#1A1A1A",
 };
 
+const catalogFeedUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/catalog-feed`;
+
+
 export default function StoreSettings() {
   const { data: settings, isLoading } = useStoreSettings();
   const updateSettings = useUpdateStoreSettings();
@@ -411,7 +414,7 @@ export default function StoreSettings() {
             <div className="flex flex-col sm:flex-row gap-2">
               <Input
                 readOnly
-                value={`https://jmwraokqyxfyyhnzlijp.supabase.co/functions/v1/catalog-feed`}
+                value={catalogFeedUrl}
                 className="font-mono text-xs"
                 onFocus={(e) => e.currentTarget.select()}
               />
@@ -422,7 +425,7 @@ export default function StoreSettings() {
                   size="sm"
                   className="gap-2"
                   onClick={() => {
-                    navigator.clipboard.writeText("https://jmwraokqyxfyyhnzlijp.supabase.co/functions/v1/catalog-feed");
+                    navigator.clipboard.writeText(catalogFeedUrl);
                     toast.success("URL copiada");
                   }}
                 >
@@ -434,13 +437,14 @@ export default function StoreSettings() {
                   variant="outline"
                   size="sm"
                   className="gap-2"
-                  onClick={() => window.open("https://jmwraokqyxfyyhnzlijp.supabase.co/functions/v1/catalog-feed", "_blank")}
+                  onClick={() => window.open(catalogFeedUrl, "_blank")}
                 >
                   <PackageSearch className="h-3.5 w-3.5" />
                   Abrir prévia
                 </Button>
               </div>
             </div>
+
             <div className="rounded-md border bg-muted/30 p-3 text-xs leading-relaxed space-y-1">
               <p className="font-semibold text-foreground">Como cadastrar no Meta:</p>
               <ol className="list-decimal list-inside space-y-0.5 text-muted-foreground">
