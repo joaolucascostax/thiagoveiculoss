@@ -104,6 +104,36 @@ function bodyTypeLabel(raw: string): string {
   return raw ? titleCase(raw) : "";
 }
 
+// A tag <BODY> do feed erra com frequência (SUV marcado como Hatch, picape como
+// Cupê, etc). Quando o modelo/versão é reconhecido, ele tem prioridade.
+const MODEL_BODY_RULES: Array<[RegExp, string]> = [
+  [/\b(strada|saveiro|toro|hilux|s10|s-10|ranger|amarok|montana|l200|triton|oroch|f-?250|f-?1000|frontier|hoggar|courier|dakota|rampage|maverick|ram\b|d-?max)\b/, "Picape"],
+  [/\b(compass|renegade|duster|captur|t-?cross|taos|tiguan|nivus|creta|tucson|santa fe|kicks|kardian|hr-?v|wr-?v|zr-?v|cr-?v|ecosport|territory|bronco|tracker|equinox|trailblazer|sw4|rav4|corolla cross|q3|q5|q7|q8|x1|x3|x5|x6|glа|gla|glb|glc|gle|range rover|evoque|discovery|pajero|outlander|asx|sorento|sportage|pulse|fastback|2008|3008|c4 cactus|tiggo|haval|jolion|song|yuan|dolphin|seal|commander|jimny|troller|land cruiser|prado)\b/, "SUV"],
+  [/\b(hb20s|voyage|prisma|cronos|virtus|siena|grand siena|cruze sed|classic|corolla|civic|city sedan|city\b|jetta|sentra|versa|logan|fluence|onix (sedan|plus)|ka\+|ka sedan|fiesta sedan|polo sedan|accord|altima|cerato|elantra|lancer|linea|cobalt|vento|astra sedan|corsa sedan|c4 pallas|passat|a3 sedan|a4|a6|série 3|série 5|c-?class|e-?class|cla\b)\b/, "Sedã"],
+  [/\b(gol|golf|onix hatch|celta|ka\b|palio|argo|mobi|kwid|fox|crossfox|polo|c3|clio|hb20|up!?|uno|fit|march|sandero|i30|207|208|corsa|astra|punto|bravo|focus|fiesta|yaris|etios|march|stilo|a1|a3 sportback|série 1|classe a)\b/, "Hatch"],
+  [/\b(kombi|doblo|spin|caravan|partner|kangoo|berlingo|ducato|sprinter|master|daily|transit|jumper|expert|scudo)\b/, "Van/Utilitário"],
+];
+
+function bodyTypeFromModel(model: string, version: string): string | null {
+  const s = `${model} ${version}`
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
+  for (const [re, label] of MODEL_BODY_RULES) {
+    if (re.test(s)) return label;
+  }
+  return null;
+}
+
+function resolveBodyType(rawBody: string, category: string, model: string, version: string): string {
+  const cat = (category ?? "").toLowerCase();
+  if (cat.includes("moto")) return "Moto";
+  if (cat.includes("caminh")) return "Caminhão";
+  return bodyTypeFromModel(model, version) ?? bodyTypeLabel(rawBody);
+}
+
+
+
 type VehicleRow = {
   external_id: string;
   source: string;
