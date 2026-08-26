@@ -49,7 +49,7 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-surface">
-      <section className="flex justify-center" style={{ backgroundColor: "#000" }}>
+      <section className="flex justify-center" style={{ backgroundColor: "#022a4d" }}>
         <img
           src={settings?.banner_url || logoVitrineCar}
           alt={storeName}
