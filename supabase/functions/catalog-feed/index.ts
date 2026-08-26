@@ -82,6 +82,19 @@ function inferBodyStyle(model: string | null | undefined): string {
   return "SEDAN";
 }
 
+function normBodyStyle(bodyType: string | null | undefined, model: string | null | undefined): string {
+  const s = (bodyType ?? "").toLowerCase();
+  if (s.includes("hatch")) return "HATCHBACK";
+  if (s.includes("picape")) return "TRUCK";
+  if (s.includes("sed")) return "SEDAN";
+  if (s.includes("suv")) return "SUV";
+  if (s.includes("cup") || s.includes("convers")) return "COUPE";
+  if (s.includes("van")) return "VAN";
+  if (s.includes("caminh")) return "TRUCK";
+  if (s.includes("moto")) return "OTHER";
+  return inferBodyStyle(model);
+}
+
 function kmValue(m: string | null | undefined): number {
   const n = Number(String(m ?? "").replace(/\D/g, ""));
   return Number.isFinite(n) && n >= 0 ? n : 0;
@@ -97,13 +110,17 @@ function formatPriceBRL(n: number): string {
   return `${n.toFixed(2)} BRL`;
 }
 
-Deno.serve(async (_req) => {
+Deno.serve(async (req) => {
   const supabase = createClient(SUPABASE_URL, SERVICE_KEY);
+
+  // Filtro opcional por tipo de carroceria: ?type=suv | hatch | picape | seda | moto ...
+  // Permite criar conjuntos de catálogo separados por tipo no Commerce Manager.
+  const typeParam = new URL(req.url).searchParams.get("type")?.trim().toLowerCase() ?? "";
 
   const [{ data: vehicles, error }, { data: settings }] = await Promise.all([
     supabase
       .from("vehicles")
-      .select("id, brand, model, year, price, mileage, transmission, fuel, color, images, is_active, fipe_price, description")
+      .select("id, brand, model, body_type, year, price, mileage, transmission, fuel, color, images, is_active, fipe_price, description")
       .eq("is_active", true)
       .order("display_order", { ascending: true }),
     supabase.from("store_settings").select("store_name").limit(1).maybeSingle(),
