@@ -14,6 +14,39 @@ export type Database = {
   }
   public: {
     Tables: {
+      feed_imports: {
+        Row: {
+          created_count: number
+          deactivated_count: number
+          error: string | null
+          finished_at: string | null
+          id: string
+          started_at: string
+          total_in_feed: number
+          updated_count: number
+        }
+        Insert: {
+          created_count?: number
+          deactivated_count?: number
+          error?: string | null
+          finished_at?: string | null
+          id?: string
+          started_at?: string
+          total_in_feed?: number
+          updated_count?: number
+        }
+        Update: {
+          created_count?: number
+          deactivated_count?: number
+          error?: string | null
+          finished_at?: string | null
+          id?: string
+          started_at?: string
+          total_in_feed?: number
+          updated_count?: number
+        }
+        Relationships: []
+      }
       leads: {
         Row: {
           created_at: string
@@ -392,6 +425,7 @@ export type Database = {
           description: string
           display_order: number
           doors: number
+          external_id: string | null
           fipe_price: number | null
           fuel: string
           id: string
@@ -403,6 +437,7 @@ export type Database = {
           model: string
           options: string[]
           price: number
+          source: string
           transmission: string
           updated_at: string
           year: string
@@ -414,6 +449,7 @@ export type Database = {
           description?: string
           display_order?: number
           doors?: number
+          external_id?: string | null
           fipe_price?: number | null
           fuel?: string
           id?: string
@@ -425,6 +461,7 @@ export type Database = {
           model: string
           options?: string[]
           price: number
+          source?: string
           transmission?: string
           updated_at?: string
           year: string
@@ -436,6 +473,7 @@ export type Database = {
           description?: string
           display_order?: number
           doors?: number
+          external_id?: string | null
           fipe_price?: number | null
           fuel?: string
           id?: string
@@ -447,6 +485,7 @@ export type Database = {
           model?: string
           options?: string[]
           price?: number
+          source?: string
           transmission?: string
           updated_at?: string
           year?: string

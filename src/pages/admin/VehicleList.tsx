@@ -1,7 +1,9 @@
 import { useState, useRef, useCallback } from "react";
 import { Link } from "react-router-dom";
-import { Plus, Pencil, Trash2, Eye, EyeOff, GripVertical, Sparkles } from "lucide-react";
+import { Plus, Pencil, Trash2, Eye, EyeOff, GripVertical, Sparkles, RefreshCw } from "lucide-react";
 import { useVehicles, useUpdateVehicle, useDeleteVehicle } from "@/hooks/useVehicles";
+import { useFeedSync, useLastFeedImport } from "@/hooks/useFeedSync";
+
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -16,6 +18,19 @@ export default function VehicleList() {
   const updateVehicle = useUpdateVehicle();
   const deleteVehicle = useDeleteVehicle();
   const queryClient = useQueryClient();
+  const feedSync = useFeedSync();
+  const { data: lastImport } = useLastFeedImport();
+
+  const handleFeedSync = () => {
+    feedSync.mutate(undefined, {
+      onSuccess: (r) =>
+        toast.success(
+          `Feed importado: ${r.created} novos, ${r.updated} atualizados, ${r.deactivated} desativados.`
+        ),
+      onError: (e) => toast.error(`Erro na importação: ${e instanceof Error ? e.message : "desconhecido"}`),
+    });
+  };
+
   const [search, setSearch] = useState("");
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [placidOpen, setPlacidOpen] = useState(false);
@@ -102,14 +117,30 @@ export default function VehicleList() {
 
   const canDrag = !search && selected.size === 0;
 
+  const lastLabel = (() => {
+    if (!lastImport) return "Nenhuma importação ainda.";
+    const when = new Date(lastImport.started_at).toLocaleString("pt-BR");
+    if (lastImport.error) return `Última importação (${when}) falhou: ${lastImport.error}`;
+    if (!lastImport.finished_at) return `Importação em andamento desde ${when}...`;
+    return `Última importação ${when} — ${lastImport.created_count} novos, ${lastImport.updated_count} atualizados, ${lastImport.deactivated_count} desativados (${lastImport.total_in_feed} no feed).`;
+  })();
+
   return (
     <div className="space-y-4 pb-24">
       <div className="flex items-center justify-between gap-4 flex-wrap">
         <h2 className="text-2xl font-bold">Veículos ({vehicles.length})</h2>
-        <Button asChild>
-          <Link to="/admin/veiculos/novo"><Plus className="h-4 w-4 mr-1" /> Novo Veículo</Link>
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" onClick={handleFeedSync} disabled={feedSync.isPending}>
+            <RefreshCw className={`h-4 w-4 mr-1 ${feedSync.isPending ? "animate-spin" : ""}`} />
+            {feedSync.isPending ? "Importando..." : "Importar do feed"}
+          </Button>
+          <Button asChild>
+            <Link to="/admin/veiculos/novo"><Plus className="h-4 w-4 mr-1" /> Novo Veículo</Link>
+          </Button>
+        </div>
       </div>
+
+      <p className="text-xs text-muted-foreground">{lastLabel}</p>
 
       <Input
         placeholder="Buscar por marca ou modelo..."
@@ -121,6 +152,7 @@ export default function VehicleList() {
       {canDrag && (
         <p className="text-xs text-muted-foreground">Arraste as linhas para reordenar. Marque para gerar criativos.</p>
       )}
+
 
       <div className="bg-card rounded-lg border overflow-hidden">
         <Table>
