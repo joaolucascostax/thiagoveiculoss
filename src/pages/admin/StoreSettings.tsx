@@ -14,6 +14,9 @@ const DEFAULT_PALETTE = {
   color_foreground: "#1A1A1A",
 };
 
+const catalogFeedUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/catalog-feed`;
+
+
 export default function StoreSettings() {
   const { data: settings, isLoading } = useStoreSettings();
   const updateSettings = useUpdateStoreSettings();
