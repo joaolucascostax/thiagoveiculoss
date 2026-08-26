@@ -12,14 +12,13 @@ interface Stage {
   key: string;
   label: string;
   icon: typeof Users;
-  color: string;
 }
 
 const STAGES: Stage[] = [
-  { key: "visitas", label: "Visitas", icon: Users, color: "bg-blue-500" },
-  { key: "ficha", label: "Ficha do veículo", icon: FileText, color: "bg-indigo-500" },
-  { key: "clique", label: "Clique no WhatsApp", icon: MessageCircle, color: "bg-amber-500" },
-  { key: "lead", label: "Leads confirmados", icon: CheckCircle2, color: "bg-emerald-500" },
+  { key: "visitas", label: "Visitas", icon: Users },
+  { key: "ficha", label: "Ficha do veículo", icon: FileText },
+  { key: "clique", label: "Clique no WhatsApp", icon: MessageCircle },
+  { key: "lead", label: "Leads confirmados", icon: CheckCircle2 },
 ];
 
 export default function FunnelCard({ events, confirmedLeads }: Props) {
@@ -48,7 +47,7 @@ export default function FunnelCard({ events, confirmedLeads }: Props) {
           return (
             <div key={stage.key}>
               <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/40">
-                <div className={`h-10 w-10 rounded-full flex items-center justify-center text-white ${stage.color}`}>
+                <div className="h-10 w-10 rounded-full bg-primary flex items-center justify-center text-primary-foreground shrink-0">
                   <Icon className="h-5 w-5" />
                 </div>
                 <div className="flex-1 min-w-0">
@@ -62,13 +61,13 @@ export default function FunnelCard({ events, confirmedLeads }: Props) {
                   </div>
                   <div className="h-2.5 rounded-full bg-muted overflow-hidden">
                     <div
-                      className={`h-full ${stage.color} transition-all`}
+                      className="h-full bg-primary transition-all"
                       style={{ width: `${width}%` }}
                     />
                   </div>
                 </div>
                 {i > 0 && (
-                  <div className="text-right min-w-[4.5rem]">
+                  <div className="text-right min-w-[4.5rem] shrink-0">
                     <p className="text-xs text-muted-foreground">conversão</p>
                     <p className={`text-sm font-bold tabular-nums ${conversion < 30 ? "text-destructive" : "text-foreground"}`}>
                       {conversion.toFixed(1)}%
