@@ -99,9 +99,8 @@ export default function StoreSettings() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!settings) return;
     try {
-      await updateSettings.mutateAsync({ id: settings.id, ...form });
+      await updateSettings.mutateAsync({ id: settings?.id, ...form });
       toast.success("Configurações salvas!");
     } catch (err: any) {
       toast.error(err.message || "Erro ao salvar");
