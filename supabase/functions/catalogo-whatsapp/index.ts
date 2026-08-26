@@ -6,7 +6,7 @@ import { createClient } from "npm:@supabase/supabase-js@2";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-const PUBLIC_SITE = Deno.env.get("PUBLIC_SITE_URL") ?? "https://edd07577-d967-4588-8cfa-e0d3303e7540.lovable.app";
+const PUBLIC_SITE = Deno.env.get("PUBLIC_SITE_URL") ?? "https://thiagoveiculoss.lovable.app";
 const CITY_UF = "Rio Verde - GO";
 const STORE_SLUG = "matriz";
 const MAX_IMAGES = 20;

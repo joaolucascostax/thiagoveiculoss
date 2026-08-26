@@ -6,7 +6,7 @@ import { createClient } from "npm:@supabase/supabase-js@2";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-const PUBLIC_SITE = Deno.env.get("PUBLIC_SITE_URL") ?? "https://edd07577-d967-4588-8cfa-e0d3303e7540.lovable.app";
+const PUBLIC_SITE = Deno.env.get("PUBLIC_SITE_URL") ?? "https://thiagoveiculoss.lovable.app";
 const DEALER_ID = Deno.env.get("DEALER_ID") ?? "thiago-veiculos-rio-verde";
 
 // Meta Automotive Inventory aceita até 20 imagens por item (image[0..19]).
