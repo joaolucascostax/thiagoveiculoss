@@ -37,6 +37,7 @@ const CTA_RE = new RegExp(
 
 const PHONE_RE = /(\+?55\s?)?\(?\d{2}\)?\s?9?\d{4}[-.\s]?\d{4}/g;
 const URL_RE = /((https?:\/\/|www\.)\S+|\S+\.(com|com\.br|net|br)(\/\S*)?)/gi;
+const ZERO_KM_RE = /(?:^|[^\d.,])(?:zero\s?km|0\s?km|zero\s?ano)(?:$|[^\wÀ-ÿ])/i;
 
 const ACRONYMS = new Set([
   "XEI","XLI","LTZ","LT","LS","GLS","GLX","TSI","TDI","GTI","GT","RS","SE","SEL","EX","LX",
@@ -174,7 +175,7 @@ Deno.serve(async (req) => {
 
     // auditoria de estoque
     const descLower = String(v.description ?? "").toLowerCase();
-    if (/(zero\s?km|0\s?km|zero\s?ano)/.test(descLower) && km > 1000)
+    if (ZERO_KM_RE.test(descLower) && km > 1000)
       issues.push({ id: v.id, title, issue: `Descrição diz "zero km" mas KM cadastrado é ${km.toLocaleString("pt-BR")}` });
     const descKm = descLower.match(/([\d.]{4,})\s?(km|mil km)/);
     if (descKm) {
