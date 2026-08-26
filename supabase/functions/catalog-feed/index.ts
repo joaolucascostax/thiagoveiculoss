@@ -133,7 +133,15 @@ Deno.serve(async (req) => {
   const dealerName = settings?.store_name ?? "Thiago Veículos";
   const rows: string[] = [HEADERS.join(",")];
 
-  for (const v of vehicles ?? []) {
+  const filtered = typeParam
+    ? (vehicles ?? []).filter((v) =>
+        (v.body_type ?? "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").includes(
+          typeParam.normalize("NFD").replace(/[̀-ͯ]/g, "")
+        )
+      )
+    : (vehicles ?? []);
+
+  for (const v of filtered) {
     // Todas as imagens do veículo (limitadas ao máximo aceito pela Meta), sem vazios.
     const imgs = (Array.isArray(v.images) ? v.images : [])
       .filter((u): u is string => typeof u === "string" && u.trim().length > 0)
@@ -166,7 +174,7 @@ Deno.serve(async (req) => {
       url,
       dealer_url: PUBLIC_SITE,
       transmission: normTransmission(v.transmission),
-      body_style: inferBodyStyle(v.model),
+      body_style: normBodyStyle(v.body_type, v.model),
       fuel_type: normFuel(v.fuel),
       dealer_privacy_policy_url: `${PUBLIC_SITE}/privacidade`,
       dealer_communication_channel: "CHAT",
@@ -189,6 +197,7 @@ Deno.serve(async (req) => {
       "mileage.value": String(km),
       previous_price: fipe > priceNum ? formatPriceBRL(fipe) : "",
       custom_label_0: fipe > 0 ? `FIPE R$ ${fipe.toLocaleString("pt-BR")}` : "",
+      custom_label_1: v.body_type ?? "",
       custom_number_0: String(km),
     };
 
