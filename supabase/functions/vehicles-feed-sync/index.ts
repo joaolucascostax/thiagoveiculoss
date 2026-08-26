@@ -1,5 +1,5 @@
-// Importa o estoque de veículos a partir do CSV público mantido pela loja.
-// Upsert por external_id; veículos com source='feed' ausentes no CSV são desativados.
+// Importa o estoque de veículos a partir do feed XML público mantido pela loja.
+// Upsert por external_id; veículos com source='feed' ausentes no feed são desativados.
 // Autenticação: token de cron (LOVABLE_CRON_SECRET) OU JWT de um usuário admin.
 
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
@@ -11,58 +11,46 @@ const CRON_SECRET = Deno.env.get("LOVABLE_CRON_SECRET");
 const CRON_SECRET_PREVIOUS = Deno.env.get("LOVABLE_CRON_SECRET_PREVIOUS");
 const FEED_SYNC_TOKEN = Deno.env.get("FEED_SYNC_TOKEN");
 
-
 const FEED_URL =
-  "https://raw.githubusercontent.com/joaolucascostax/thiago2/main/docs/catalog_vehicles.csv";
+  "https://autoconf-prod.s3.sa-east-1.amazonaws.com/estoque-site/ZC9lCY5qT0Tu3RJ5n1fBh5CsOCLjdrMEyhXeQHEH.xml";
 
 const MAX_IMAGES = 20;
 
-/* ---------------- CSV ---------------- */
+/* ---------------- XML ---------------- */
 
-function parseCsv(text: string): string[][] {
-  const rows: string[][] = [];
-  let row: string[] = [];
-  let field = "";
-  let inQuotes = false;
+function decodeEntities(s: string): string {
+  return s
+    .replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g, "$1")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&quot;/g, '"')
+    .replace(/&#0?39;|&apos;/g, "'")
+    .replace(/&nbsp;/g, " ")
+    .replace(/&amp;/g, "&")
+    .trim();
+}
 
-  for (let i = 0; i < text.length; i++) {
-    const c = text[i];
-    if (inQuotes) {
-      if (c === '"') {
-        if (text[i + 1] === '"') {
-          field += '"';
-          i++;
-        } else inQuotes = false;
-      } else field += c;
-      continue;
-    }
-    if (c === '"') {
-      inQuotes = true;
-    } else if (c === ",") {
-      row.push(field);
-      field = "";
-    } else if (c === "\n") {
-      row.push(field);
-      field = "";
-      rows.push(row);
-      row = [];
-    } else if (c === "\r") {
-      /* ignora */
-    } else {
-      field += c;
-    }
+function tag(xml: string, name: string): string {
+  const m = new RegExp(`<${name}(?:\\s[^>]*)?>([\\s\\S]*?)</${name}>`, "i").exec(xml);
+  return m ? decodeEntities(m[1]) : "";
+}
+
+function tagAll(xml: string, name: string): string[] {
+  const re = new RegExp(`<${name}(?:\\s[^>]*)?>([\\s\\S]*?)</${name}>`, "gi");
+  const out: string[] = [];
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(xml)) !== null) {
+    const v = decodeEntities(m[1]);
+    if (v) out.push(v);
   }
-  if (field.length > 0 || row.length > 0) {
-    row.push(field);
-    rows.push(row);
-  }
-  return rows.filter((r) => r.some((cell) => cell.trim() !== ""));
+  return out;
 }
 
 /* ---------------- mapeamento ---------------- */
 
 function priceNumber(raw: string): number {
-  const n = Number(String(raw ?? "").replace(/[^\d.]/g, ""));
+  const s = String(raw ?? "").replace(/[^\d.,]/g, "").replace(/\.(?=\d{3}\b)/g, "").replace(",", ".");
+  const n = Number(s);
   return Number.isFinite(n) ? Math.round(n) : 0;
 }
 
@@ -75,16 +63,16 @@ function mileageLabel(raw: string): string {
 function transmissionLabel(raw: string): string {
   const s = (raw ?? "").toLowerCase();
   if (s.includes("manual")) return "MANUAL";
-  if (s.includes("autom")) return "AUTOMÁTICO";
+  if (s.includes("autom") || s.includes("cvt") || s.includes("dsg")) return "AUTOMÁTICO";
   return "AUTOMÁTICO";
 }
 
 function fuelLabel(raw: string): string {
   const s = (raw ?? "").toLowerCase();
-  if (s.includes("elect") || s.includes("elet")) return "ELÉTRICO";
-  if (s.includes("hybrid") || s.includes("hibr")) return "HÍBRIDO";
+  if (s.includes("elect") || s.includes("elét") || s.includes("elet")) return "ELÉTRICO";
+  if (s.includes("hybrid") || s.includes("híbr") || s.includes("hibr")) return "HÍBRIDO";
   if (s.includes("diesel")) return "DIESEL";
-  if (s.includes("flex") || s.includes("ethanol") || s.includes("etanol")) return "FLEX";
+  if (s.includes("flex") || s.includes("ethanol") || s.includes("etanol") || s.includes("álcool")) return "FLEX";
   if (s.includes("gas")) return "GASOLINA";
   return "FLEX";
 }
@@ -92,6 +80,15 @@ function fuelLabel(raw: string): string {
 function yearOnly(raw: string): string {
   const m = String(raw ?? "").match(/\b(19|20)\d{2}\b/);
   return m ? m[0] : String(raw ?? "").trim();
+}
+
+function titleCase(s: string): string {
+  return s
+    .toLowerCase()
+    .split(/\s+/)
+    .map((w) => (w.length > 2 ? w.charAt(0).toUpperCase() + w.slice(1) : w))
+    .join(" ")
+    .trim();
 }
 
 type VehicleRow = {
@@ -111,39 +108,38 @@ type VehicleRow = {
   is_active: boolean;
 };
 
-function mapRow(get: (k: string) => string): VehicleRow | null {
-  const externalId = (get("vehicle_id") || get("id")).trim();
+function mapAd(ad: string): VehicleRow | null {
+  const externalId = tag(ad, "ID");
   if (!externalId) return null;
 
-  const brand = (get("make") || "").trim();
-  const trim = (get("trim") || "").trim();
-  const baseModel = (get("model") || "").trim();
-  const model = [baseModel, trim].filter(Boolean).join(" ").trim() || (get("title") || "").trim();
+  const brand = tag(ad, "MAKE");
+  const baseModel = tag(ad, "MODEL");
+  const version = tag(ad, "VERSION");
+  const model = (version || baseModel).trim();
   if (!brand || !model) return null;
 
-  const images: string[] = [];
-  for (let i = 0; i < MAX_IMAGES; i++) {
-    const u = (get(`image[${i}].url`) || "").trim();
-    if (u) images.push(u);
-  }
+  const images = tagAll(ad, "IMAGE_URL").slice(0, MAX_IMAGES);
+  const mileageNum = Number(tag(ad, "MILEAGE").replace(/\D/g, "")) || 0;
+  const condition = tag(ad, "CONDITION").toLowerCase();
 
   return {
     external_id: externalId,
     source: "feed",
     brand,
     model,
-    year: yearOnly(get("year")),
-    price: priceNumber(get("price") || get("sale_price")),
-    mileage: mileageLabel(get("mileage.value")),
-    transmission: transmissionLabel(get("transmission")),
-    fuel: fuelLabel(get("fuel_type")),
-    color: (get("exterior_color") || "").trim(),
-    description: (get("description") || "").trim(),
+    year: yearOnly(tag(ad, "YEAR")),
+    price: priceNumber(tag(ad, "PRICE") || tag(ad, "REGULAR_PRICE")),
+    mileage: mileageLabel(String(mileageNum)),
+    transmission: transmissionLabel(tag(ad, "gear")),
+    fuel: fuelLabel(tag(ad, "FUEL")),
+    color: titleCase(tag(ad, "COLOR")),
+    description: tag(ad, "DESCRIPTION"),
     images,
-    is_new: (get("state_of_vehicle") || "").toUpperCase() === "NEW",
+    is_new: condition.includes("novo") && !condition.includes("semi") && mileageNum <= 1000,
     is_active: true,
   };
 }
+
 
 /* ---------------- auth ---------------- */
 
@@ -213,23 +209,19 @@ Deno.serve(async (req) => {
     if (!resp.ok) return await fail(`feed_http_${resp.status}`, 502);
     const text = await resp.text();
 
-    const rows = parseCsv(text);
-    if (rows.length < 2) return await fail("feed_empty", 502);
+    const ads = text.match(/<AD>[\s\S]*?<\/AD>/gi) ?? [];
+    if (ads.length === 0) return await fail("feed_empty", 502);
 
-    const header = rows[0].map((h) => h.trim());
     const feedVehicles: VehicleRow[] = [];
     const seen = new Set<string>();
 
-    for (const raw of rows.slice(1)) {
-      const get = (k: string) => {
-        const idx = header.indexOf(k);
-        return idx === -1 ? "" : raw[idx] ?? "";
-      };
-      const mapped = mapRow(get);
+    for (const ad of ads) {
+      const mapped = mapAd(ad);
       if (!mapped || seen.has(mapped.external_id)) continue;
       seen.add(mapped.external_id);
       feedVehicles.push(mapped);
     }
+
 
     if (feedVehicles.length === 0) return await fail("no_valid_rows", 502);
 
