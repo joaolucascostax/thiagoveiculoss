@@ -149,10 +149,13 @@ function mapRow(get: (k: string) => string): VehicleRow | null {
 
 function hasValidCronToken(req: Request): boolean {
   const m = /^Bearer ([^\s,]+)$/.exec(req.headers.get("authorization") ?? "");
-  const token = m?.[1];
-  if (!token || !CRON_SECRET) return false;
+  const token = m?.[1] ?? req.headers.get("x-feed-sync-token") ?? "";
+  if (!token) return false;
+  if (FEED_SYNC_TOKEN && token === FEED_SYNC_TOKEN) return true;
+  if (!CRON_SECRET) return false;
   return token === CRON_SECRET || (!!CRON_SECRET_PREVIOUS && token === CRON_SECRET_PREVIOUS);
 }
+
 
 async function isAdminRequest(req: Request, admin: ReturnType<typeof createClient>) {
   const m = /^Bearer ([^\s,]+)$/.exec(req.headers.get("authorization") ?? "");
