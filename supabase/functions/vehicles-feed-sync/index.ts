@@ -209,23 +209,19 @@ Deno.serve(async (req) => {
     if (!resp.ok) return await fail(`feed_http_${resp.status}`, 502);
     const text = await resp.text();
 
-    const rows = parseCsv(text);
-    if (rows.length < 2) return await fail("feed_empty", 502);
+    const ads = text.match(/<AD>[\s\S]*?<\/AD>/gi) ?? [];
+    if (ads.length === 0) return await fail("feed_empty", 502);
 
-    const header = rows[0].map((h) => h.trim());
     const feedVehicles: VehicleRow[] = [];
     const seen = new Set<string>();
 
-    for (const raw of rows.slice(1)) {
-      const get = (k: string) => {
-        const idx = header.indexOf(k);
-        return idx === -1 ? "" : raw[idx] ?? "";
-      };
-      const mapped = mapRow(get);
+    for (const ad of ads) {
+      const mapped = mapAd(ad);
       if (!mapped || seen.has(mapped.external_id)) continue;
       seen.add(mapped.external_id);
       feedVehicles.push(mapped);
     }
+
 
     if (feedVehicles.length === 0) return await fail("no_valid_rows", 502);
 
