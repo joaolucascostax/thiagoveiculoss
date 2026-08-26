@@ -6,8 +6,8 @@ import { createClient } from "npm:@supabase/supabase-js@2";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-const PUBLIC_SITE = Deno.env.get("PUBLIC_SITE_URL") ?? "https://samcar.com.br";
-const DEALER_ID = "samcar-sp";
+const PUBLIC_SITE = Deno.env.get("PUBLIC_SITE_URL") ?? "https://edd07577-d967-4588-8cfa-e0d3303e7540.lovable.app";
+const DEALER_ID = Deno.env.get("DEALER_ID") ?? "thiago-veiculos-rio-verde";
 
 // Meta Automotive Inventory aceita até 20 imagens por item (image[0..19]).
 const MAX_IMAGES = 20;
@@ -113,7 +113,7 @@ Deno.serve(async (_req) => {
     return new Response(`error: ${error.message}`, { status: 500 });
   }
 
-  const dealerName = settings?.store_name ?? "SAMCAR";
+  const dealerName = settings?.store_name ?? "Thiago Veículos";
   const rows: string[] = [HEADERS.join(",")];
 
   for (const v of vehicles ?? []) {
@@ -184,7 +184,7 @@ Deno.serve(async (_req) => {
     status: 200,
     headers: {
       "Content-Type": "text/csv; charset=utf-8",
-      "Content-Disposition": 'inline; filename="samcar-catalog.csv"',
+      "Content-Disposition": 'inline; filename="catalogo-veiculos.csv"',
       "Cache-Control": "public, max-age=1800",
       "Access-Control-Allow-Origin": "*",
     },

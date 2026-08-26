@@ -6,7 +6,7 @@ import { createClient } from "npm:@supabase/supabase-js@2";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-const PUBLIC_SITE = Deno.env.get("PUBLIC_SITE_URL") ?? "https://samcar.com.br";
+const PUBLIC_SITE = Deno.env.get("PUBLIC_SITE_URL") ?? "https://edd07577-d967-4588-8cfa-e0d3303e7540.lovable.app";
 const CITY_UF = "Rio Verde - GO";
 const STORE_SLUG = "matriz";
 const MAX_IMAGES = 20;
@@ -42,7 +42,7 @@ const ZERO_KM_RE = /(?:^|[^\d.,])(?:zero\s?km|0\s?km|zero\s?ano)(?:$|[^\wÀ-ÿ])
 const ACRONYMS = new Set([
   "XEI","XLI","LTZ","LT","LS","GLS","GLX","TSI","TDI","GTI","GT","RS","SE","SEL","EX","LX",
   "4X4","4X2","V6","V8","AWD","4WD","ABS","CVT","MT","AT","SR","SRV","SV","XLS","XLT","GLI",
-  "S","R","N","BR","SAMCAR","XRE","XT","GNV",
+  "S","R","N","BR","XRE","XT","GNV",
 ]);
 
 const COLOR_MAP: Record<string, string> = {
@@ -158,7 +158,7 @@ Deno.serve(async (req) => {
 
   if (error) return new Response(`error: ${error.message}`, { status: 500 });
 
-  const storeName = settings?.store_name ?? "SAMCAR";
+  const storeName = settings?.store_name ?? "Thiago Veículos";
   const items: string[] = [];
   const dropped: { id: string; title: string; reason: string }[] = [];
   const issues: { id: string; title: string; issue: string }[] = [];
