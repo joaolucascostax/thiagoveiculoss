@@ -215,6 +215,7 @@ export async function trackEvent(event_type: EventType, opts: TrackOpts = {}): P
 
 /* ---------- Meta Pixel helper ---------- */
 type PixelEvent =
+  | "PageView"
   | "ViewContent"
   | "Search"
   | "Lead"

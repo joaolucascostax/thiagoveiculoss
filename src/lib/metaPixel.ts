@@ -39,8 +39,9 @@ export function initMetaPixel(pixelId?: string | null, externalId?: string) {
   if (typeof fbq !== "function") return;
 
   fbq("init", pixelId, externalId ? { external_id: externalId } : undefined);
-  fbq("track", "PageView");
+  // PageView é disparado por trackPixel (navegador + CAPI com o mesmo event_id)
   loadedPixelId = pixelId;
+  return true;
 }
 
 export function getLoadedPixelId() {
