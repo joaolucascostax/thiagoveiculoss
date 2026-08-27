@@ -38,6 +38,12 @@ const WhatsAppButton = ({ message, vehicleId, value, vehicleModel, vehicleYear }
       },
       eventId
     );
+    trackPixel("Lead", {
+      content_type: vehicleId ? "vehicle" : undefined,
+      content_ids: vehicleId ? [vehicleId] : undefined,
+      value: value ?? undefined,
+      currency: value ? "BRL" : undefined,
+    });
     void trackEvent("whatsapp_click", { vehicle_id: vehicleId ?? null, value: value ?? null, event_id: eventId });
     void createLead({
       vehicle_id: vehicleId ?? null,

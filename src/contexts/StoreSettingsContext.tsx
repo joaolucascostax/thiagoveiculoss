@@ -2,7 +2,7 @@ import { createContext, useContext, useEffect, type ReactNode } from "react";
 import { useStoreSettings, type StoreSettings } from "@/hooks/useStoreSettings";
 import { applyPalette } from "@/lib/colors";
 import { initMetaPixel } from "@/lib/metaPixel";
-import { getSessionId } from "@/lib/tracking";
+import { getSessionId, trackPixel } from "@/lib/tracking";
 
 interface StoreSettingsContextType {
   settings: StoreSettings | null;
@@ -25,7 +25,9 @@ export function StoreSettingsProvider({ children }: { children: ReactNode }) {
         color_foreground: (data as any).color_foreground,
       });
       // Meta Pixel dinâmico + Advanced Matching (external_id estável)
-      initMetaPixel((data as any).meta_pixel_id, getSessionId());
+      const started = initMetaPixel((data as any).meta_pixel_id, getSessionId());
+      // PageView com event_id compartilhado (navegador + CAPI = deduplicado)
+      if (started) trackPixel("PageView");
     }
   }, [data]);
 
