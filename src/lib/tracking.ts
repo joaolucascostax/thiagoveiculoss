@@ -233,7 +233,45 @@ export interface PixelParams {
   [k: string]: unknown;
 }
 
-export function trackPixel(event: PixelEvent, params: PixelParams = {}, eventId?: string): string {
+/** Envia o mesmo evento pelo servidor (Conversions API), com o event_id compartilhado. */
+async function sendToCapi(
+  event: PixelEvent,
+  params: PixelParams,
+  eventId: string,
+  identity?: { em?: string; ph?: string }
+): Promise<void> {
+  try {
+    const ids = readClickIds();
+    await supabase.functions.invoke("meta-capi", {
+      body: {
+        event_name: event,
+        event_id: eventId,
+        event_time: Math.floor(Date.now() / 1000),
+        event_source_url: typeof window !== "undefined" ? window.location.href : undefined,
+        action_source: "website",
+        user_data: {
+          fbc: ids.fbc,
+          fbp: ids.fbp,
+          external_id: getSessionId(),
+          ct: "rio verde",
+          st: "go",
+          country: "br",
+          ...(identity ?? {}),
+        },
+        custom_data: params,
+      },
+    });
+  } catch {
+    /* silent */
+  }
+}
+
+export function trackPixel(
+  event: PixelEvent,
+  params: PixelParams = {},
+  eventId?: string,
+  identity?: { em?: string; ph?: string }
+): string {
   const id = eventId ?? uuid();
   try {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -244,8 +282,10 @@ export function trackPixel(event: PixelEvent, params: PixelParams = {}, eventId?
   } catch {
     /* noop */
   }
+  void sendToCapi(event, params, id, identity);
   return id;
 }
+
 
 /**
  * Dispara Pixel + evento interno com o MESMO event_id (deduplicação pronta para CAPI).
