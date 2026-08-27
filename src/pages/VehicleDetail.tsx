@@ -39,6 +39,13 @@ function trackInterest(
     eventId
   );
   trackPixel("Contact", { content_ids: [vehicle.id], value: vehicle.price, currency: "BRL" }, eventId);
+  trackPixel("Lead", {
+    content_type: "vehicle",
+    content_ids: [vehicle.id],
+    content_name: `${vehicle.brand} ${vehicle.model}`,
+    value: vehicle.price,
+    currency: "BRL",
+  });
   void trackEvent("whatsapp_click", { vehicle_id: vehicle.id, value: vehicle.price, event_id: eventId });
   void createLead({
     vehicle_id: vehicle.id,
