@@ -163,9 +163,21 @@ Deno.serve(async (req) => {
     );
   } catch (err) {
     console.error("[meta-audiences-sync] failed", err);
-    return new Response(JSON.stringify({ error: "sync_failed", detail: String(err) }), {
-      status: 502,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    const detail = String(err);
+    const isAuthError = detail.includes('"code":190') || detail.includes("OAuthException");
+    return new Response(
+      JSON.stringify({
+        error: isAuthError ? "invalid_meta_token" : "sync_failed",
+        message: isAuthError
+          ? "O token de acesso do Meta Ads (META_ADS_ACCESS_TOKEN) é inválido ou expirou. Gere um novo token no Gerenciador de Negócios e atualize o segredo."
+          : "Falha ao sincronizar públicos com o Meta.",
+        detail,
+      }),
+      {
+        status: isAuthError ? 400 : 502,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      }
+    );
+
   }
 });
