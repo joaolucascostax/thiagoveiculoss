@@ -164,20 +164,34 @@ Deno.serve(async (req) => {
   } catch (err) {
     console.error("[meta-audiences-sync] failed", err);
     const detail = String(err);
-    const isAuthError = detail.includes('"code":190') || detail.includes("OAuthException");
+    const isTokenError = detail.includes('"code":190');
+    // Meta devolve error_user_msg legível para casos como termos não aceitos
+    let userMsg: string | undefined;
+    const match = detail.match(/"error_user_msg":"((?:[^"\\]|\\.)*)"/);
+    if (match) {
+      try {
+        userMsg = JSON.parse(`"${match[1]}"`);
+      } catch {
+        userMsg = match[1];
+      }
+    }
+    const isConfigError = isTokenError || !!userMsg;
     return new Response(
       JSON.stringify({
-        error: isAuthError ? "invalid_meta_token" : "sync_failed",
-        message: isAuthError
-          ? "O token de acesso do Meta Ads (META_ADS_ACCESS_TOKEN) é inválido ou expirou. Gere um novo token no Gerenciador de Negócios e atualize o segredo."
-          : "Falha ao sincronizar públicos com o Meta.",
+        error: isTokenError ? "invalid_meta_token" : userMsg ? "meta_config_error" : "sync_failed",
+        message:
+          userMsg ??
+          (isTokenError
+            ? "O token de acesso do Meta Ads (META_ADS_ACCESS_TOKEN) é inválido ou expirou. Gere um novo token no Gerenciador de Negócios e atualize o segredo."
+            : "Falha ao sincronizar públicos com o Meta."),
         detail,
       }),
       {
-        status: isAuthError ? 400 : 502,
+        status: isConfigError ? 400 : 502,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       }
     );
+
 
   }
 });
