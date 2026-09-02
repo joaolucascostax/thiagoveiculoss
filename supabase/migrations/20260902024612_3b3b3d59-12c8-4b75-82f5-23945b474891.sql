@@ -1,0 +1,2 @@
+ALTER TABLE public.vehicle_events DROP CONSTRAINT IF EXISTS vehicle_events_event_type_check;
+ALTER TABLE public.vehicle_events ADD CONSTRAINT vehicle_events_event_type_check CHECK (event_type = ANY (ARRAY['view','view_content','whatsapp_click','lead','filter_use','gallery_open','phone_view','share_click']));
