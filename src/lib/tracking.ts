@@ -358,6 +358,8 @@ export function withTrackingCode(message: string, code: string): string {
  * status "aguardando_contato" e só vira lead de verdade quando o admin
  * confirma no painel (ou quando ganha nome/telefone).
  */
+const recentLeads = new Map<string, number>();
+
 export async function createLead(opts: {
   vehicle_id?: string | null;
   message?: string;
@@ -365,8 +367,15 @@ export async function createLead(opts: {
   tracking_code?: string | null;
 }): Promise<void> {
   try {
+    // Evita leads duplicados: mesmo veículo, mesma sessão, dentro de 60s
+    const key = `${opts.vehicle_id ?? "none"}`;
+    const last = recentLeads.get(key);
+    if (last && Date.now() - last < 60_000) return;
+    recentLeads.set(key, Date.now());
+
     const clickIds = readClickIds();
     const utms = readUtms();
+
     await supabase.from("leads").insert({
       vehicle_id: opts.vehicle_id ?? null,
       message: opts.message ?? null,
